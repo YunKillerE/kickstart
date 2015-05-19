@@ -1,0 +1,249 @@
+#!/bin/bash -x
+#
+
+function moduledep()
+{
+	deps=$(modprobe --set-version $(uname -r) --show-depends $1 2>/dev/null| awk '/^insmod / { print gensub(".*/","","g",$2) }' | while read foo ; do [ "${foo%%.ko}" != "$1" ] && echo -n "${foo%%.ko} " ; done)
+	[ -n "$deps" ] && echo ": $deps"
+}
+
+function findmodule()
+{
+	local modName=$1
+	if [ -z "$modName" ]
+	then
+		return
+	fi
+	moduledep $modName
+	for j in $deps
+	do
+		echo $deps2|grep -q $j || deps2="$j $deps2"
+	done
+	for i in $deps; do
+		findmodule $i
+	done
+}
+
+function insertModules()
+{
+	deps2=""
+	ETH="0200"
+        modprobe ahci
+	num=`/sbin/lspci -n| grep -c "${ETH}"`
+	for j in `seq 1 ${num}`
+	do
+		vendor_id=$(/sbin/lspci -n| grep $(/sbin/lspci -n | grep ${ETH}|awk '{print $1}'| sed -n "$j"p)| sed 's/Class //'| awk -F":| " '{print $5}')
+		device_id=$(/sbin/lspci -n| grep $(/sbin/lspci -n | grep ${ETH}|awk '{print $1}'| sed -n "$j"p)| sed 's/Class //'| awk -F":| " '{print $6}')
+		driver=`grep "0x0000$vendor_id 0x0000$device_id" /lib/modules/$(uname -r)/modules.pcimap|awk '{print $1}'|sort|uniq`
+		findmodule $driver
+		deps2="$deps2 $driver"
+	done
+	for i in $deps2
+	do
+		modprobe $i
+	done
+}
+
+function parseCmdline()
+{
+    if ! cat /proc/cmdline | grep -q RAMOS_ARGS;then
+        return
+    fi
+
+    ramos_args=`sed -n '/RAMOS_ARGS/{s/.*_RAMOS_ARGS="\(.*\)".*/\1/p}' /proc/cmdline`
+    temp=($ramos_args)
+    TEMP=`getopt -o dn:m:g: --long initrd-debug,network:,netmask:,gateway:,dns: \
+        -n 'init' -- ${temp[@]}`
+    eval set -- "$TEMP"
+    while true
+    do
+        case "$1" in
+            --network)
+                ip=$2
+                shift
+                ;;
+            --netmask)
+                netmask=$2
+                shift
+                ;;
+            --gateway)
+                gateway=$2
+                shift
+                ;;
+            --dns)
+                domainname_server=$2
+                shift
+                ;;
+            --initrd-debug)
+                initrd_debug=true
+                ;;
+            --)
+                shift
+                break
+                ;;
+        esac
+        shift
+    done
+    if [[ X$ip != X ]]; then
+        [[ (X$netmask == X) || (X$gateway == X) || (X$domainname_server == X) ]] && ( echo 'network argument is too less' ;exec sh)
+    fi
+}
+
+function dhcpIP()
+{
+	ETHERNET=$1
+	/bin/ifconfig lo 127.0.0.1 netmask 255.0.0.0 up
+	cat <<- EOF >/etc/dhclient.conf
+	interface "$ETHERNET" {
+	request subnet-mask, broadcast-address, routers, domain-name, domain-name-servers, host-name, root-path;
+	send vendor-class-identifier "PXEClient";
+	timeout 300;
+}
+EOF
+	/sbin/dhclient -1 -cf /etc/dhclient.conf -pf /tmp/dhclient.pid -lf /tmp/dhclient.leases $ETHERNET >/tmp/dhclient.out 2>&1
+	if [ $? -ne 0 ]; then
+		echo "======================================" 
+		echo "ERROR! dhclient failed for $ETHERNET!" 
+		echo "======================================" 
+		return 1
+	else
+		echo "======================================" 
+		echo "OK! dhclient success for $ETHERNET!"
+		echo "======================================" 
+		return 0
+	fi
+}
+
+function obtainIP()
+{
+	for i in 0 1 2 3 4 5 6 7
+	do
+		dhcpIP eth$i
+		[ $? -eq 0 ] && break
+		[ $? -eq 1 -a $i -eq 7 ] && echo "ERROR, I tried 8 netcards, and can not obtain IP for anyone, find module for it." && exec sh
+	done
+	#t=0
+	#while [ "$t" -lt 20 ] && [ ! -e /etc/resolv.conf ]; do
+	#	sleep 1;
+	#	((t=t+1));
+	#done
+	#if [ ! -e /etc/resolv.conf ]
+	#then
+	#	echo '********'
+	#	echo 'WARNING:  /etc/resolv.conf not created - DNS service unavailable.';
+	#	echo '********'
+	#fi
+}
+
+function setNetwork()
+{
+    echo $ip, $netmask, $gateway
+    for i in 0 1 2 3 4 5 6 7
+    do
+        ifconfig eth$i $ip netmask $netmask 
+        sleep 10
+        ip route del default
+        ip route add default via $gateway dev eth$i
+        flag=0
+        for j in `seq 10`
+        do
+            ping -c 1 $gateway
+            [ $? -eq 0 ] && flag=1 && break
+        done
+        [ $flag -eq 1 ] && break
+		[ $? -eq 1 -a $i -eq 7 ] && echo "ERROR, I tried 8 netcards, and can not ping gateway after configure net interface" && exec sh
+    done
+    #cat  <<- EOF >/etc/resolv.conf
+    #nameserver $domainname_server
+#EOF
+}
+function getSqfs()
+{
+	    KS=""
+	    DHCPIP=`ifconfig | grep "inet addr"| grep -v "127.0.0.1"| grep -v "255.255.255.255" |awk '{print $2}'| awk -F":" '{print $2}'`
+            if grep -q 'KS' <<< $CMDLINE ;then
+                KS=`sed 's/.*KS=\([0-9.]*\).*/\1/' <<< $CMDLINE`
+                echo "proc/cmdline: KS=$KS"
+            else
+	    		echo "can't ping $KS"
+	    		exec /bin/bash
+            fi
+	    cd /
+	    wget "http://$KS:8888/ngis/software/ngis-ram.tgz"
+}
+
+export PATH="/bin:/sbin:/usr/bin"
+ETHERNET=eth0
+
+mkdir /sys /proc /newroot /mnt 
+
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+mount -o mode=0755 -t tmpfs /dev /dev
+mkdir /dev/pts
+mount -t devpts -o gid=5,mode=620 /dev/pts /dev/pts
+mkdir /dev/shm
+mkdir /dev/mapper
+echo "Creating initial device nodes"
+mknod /dev/loop0 b 7 0
+mknod /dev/mem c 1 1
+mknod /dev/null c 1 3
+mknod /dev/zero c 1 5
+mknod /dev/systty c 4 0
+mknod /dev/tty c 5 0
+mknod /dev/console c 5 1
+mknod /dev/ptmx c 5 2
+mknod /dev/rtc c 10 135
+mknod /dev/tty0 c 4 0
+mknod /dev/tty1 c 4 1
+mknod /dev/ttyS0 c 4 64
+mknod /dev/ttyS1 c 4 65
+/sbin/udevd -d
+
+CMDLINE=`cat /proc/cmdline`
+parseCmdline --initrd-debug 
+###############################
+insertModules
+###############################
+if [[ X"$network" == X ]] ;then
+    obtainIP
+else
+    setNetwork
+fi
+
+echo "GetSQFS"
+###############################
+getSqfs
+###############################
+
+mkdir -p /newroot/
+mkdir /newroot/dev
+mount -t tmpfs tmpfs /newroot
+cd /newroot
+
+echo "install the RAMOS system......"
+tar -zxf ../ngis-ram.tgz
+cd ..
+mkdir -p /newroot/tmp/pxe_modules >/dev/null 2>&1
+mount --move /dev /newroot/dev
+if [ X$ETHERNET = Xeth0 ]
+then
+    :
+else
+    mv /newroot/etc/sysconfig/network-scripts/ifcfg-eth0 /newroot/etc/sysconfig/network-scripts/ifcfg-${ETHERNET}
+    sed -i "s/eth0/${ETHERNET}/" /newroot/etc/sysconfig/network-scripts/ifcfg-${ETHERNET}
+fi
+echo "KS=$KS" >/newroot/root/initrdconf.log
+echo "ETHERNET=$ETHERNET" >>/newroot/root/initrdconf.log
+echo "DHCPIP=$DHCPIP" >>/newroot/root/initrdconf.log
+cp -f /tmp/dhclient.pid /newroot/tmp/dhclient.pid
+cp -f /init /newroot/tmp/init_initrd
+cp -f /etc/resolv.conf /newroot/etc/resolv.conf
+#mount --move /dev /newroot/dev
+#umount /sys /proc
+#exec sh
+if [[ X"$initrd_debug" == Xtrue ]];then
+    exec sh
+fi
+
+exec switch_root -c /dev/console /newroot "/sbin/init" || exec sh
