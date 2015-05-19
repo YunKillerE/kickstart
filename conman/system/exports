@@ -1,0 +1,1 @@
+/opt/iso       *(rw,sync,no_root_squash)

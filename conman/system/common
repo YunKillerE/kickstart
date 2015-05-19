@@ -1,0 +1,70 @@
+## -- clear the acpi option for boot ------------------------------------------
+sed -i -e 's/acpi=off//g' /boot/grub/grub.conf
+
+## -- set the open file limit for root and admin user -------------------------
+LIMITFILE="/etc/security/limits.conf"
+sed -i -e 's/# End of file//' $LIMITFILE
+echo -e "root\tsoft\tnofile\t65535" >> $LIMITFILE
+echo -e "root\thard\tnofile\t65535" >> $LIMITFILE
+echo -e "admin\tsoft\tnofile\t65535" >> $LIMITFILE
+echo -e "admin\thard\tnofile\t65535" >> $LIMITFILE
+
+echo "# End of file" >> $LIMITFILE
+
+## -- disable the unuse service -----------------------------------------------
+for service in `chkconfig --list | awk '{ print $1 }'|grep -vE ":|syslog|crond|sshd|network|snmpd|rpcbind|ntpd"`
+do
+   chkconfig --level 123456 $service off
+done
+
+chkconfig --level 345 ntpd on
+
+service snmpd stop
+chkconfig --level 35 snmpd on
+
+## -- set the NIC eth0 --------------------------------------------------------
+
+SN=`dmidecode | sed -n -f ${SDIR}/system/sn.scr` > /dev/null 2>&1
+
+HOST=`cat ${SDIR}/sn2hosts | grep -i ${SN} | awk '{ print $2 }'`
+
+DOID=`echo ${HOST} | awk -F[.] '{ print $2 }' | awk -F[n] '{ print $2 }'`
+
+IP=`cat ${SDIR}/hosts | sed -e 's/#.*//' | grep -w ${HOST} | \
+   sed -e 's/^[ \t]*//' | awk '{ print $1 }'`
+
+NET=`echo ${IP} | awk -F'.' '{ print 255"."255"."255".0" }'`
+
+GW=`echo ${IP} | awk -F'.' '{ print $1"."$2"."$3".126" }'`
+
+
+cat ${SDIR}/system/network | sed -e "s/\(HOSTNAME=\).*/\1${HOST}/" \
+   > /etc/sysconfig/network
+hostname $HOST
+
+AN=`grep eth /etc/udev/rules.d/70-persistent-net.rules|wc -l`
+TE=`grep ixg /etc/udev/rules.d/70-persistent-net.rules|wc -l`
+GE=$[AN-TE]
+        sed -i '/^HWADDR/d'  /etc/sysconfig/network-scripts/ifcfg-eth*
+        sed -i '/^NM_CONTROLLED/d'  /etc/sysconfig/network-scripts/ifcfg-eth*
+        if  [ "X$GE" = "X2" ];then
+                        sed -i "s/eth1/eth2/g" /etc/udev/rules.d/70-persistent-net.rules
+  else
+        echo "nothing"
+        fi
+
+## -- copy config file -----------------------------------------------
+cp -p ${SDIR}/resolv.conf /etc/resolv.conf
+cp -p ${SDIR}/hosts         /etc/hosts
+cp -pf ${SDIR}/system/ntp.conf /etc/
+
+#install kernel
+rpm -ivh ${SDIR}/tools/hwconfig-1.16.8-2.noarch.rpm
+rpm -ivh ${SDIR}/tools/kernel-firmware-2.6.32-220.17.1.tb619.el6.x86_64.rpm
+rpm -ivh ${SDIR}/tools/kernel-2.6.32-220.17.1.tb619.el6.x86_64.rpm
+rpm -ivh ${SDIR}/tools/taobao-repo-utils-1.1.0-22.noarch.rpm
+rpm -ivh ${SDIR}/tools/Staragent-1.0.2-el6.x86_64.rpm
+
+#uninstall iptables
+rpm -e --nodeps iptables
+rpm -e --nodeps iptables-ipv6

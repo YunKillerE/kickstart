@@ -1,0 +1,27 @@
+bmcip=`echo ${IP} | awk -F'.' '{ print 10"."120"."'$DOID'"."$4 }'`
+
+type=`hwconfig | grep System | awk '{ print $2 }'`
+
+if [ $type == "HP" ]
+  then
+     channel=2
+else
+     channel=1
+fi
+
+/etc/init.d/ipmi restart
+ipmitool lan set $channel access on
+ipmitool lan set $channel access on
+ipmitool lan set $channel ipsrc static
+ipmitool lan set $channel ipaddr $bmcip
+ipmitool lan set $channel netmask 255.255.255.0
+
+ipmitool user set name 3  taobao
+ipmitool user set  password 3 9ijn0okm
+ipmitool user enable 3
+ipmitool user priv 3 4 $channel
+ipmitool sol payload enable $channel 3
+ipmitool channel setaccess $channel 3 callin=on ipmi=on link=on privilege=4
+id=`ipmitool user list $channel | grep taobao | awk '{if($1 !~ 3 )print $1}'`
+for i in $id;do ipmitool user set password $i 9ijn0okm; done
+sleep 2

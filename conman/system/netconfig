@@ -1,0 +1,10 @@
+AN=`grep eth /etc/udev/rules.d/70-persistent-net.rules|wc -l`
+TE=`grep ixg /etc/udev/rules.d/70-persistent-net.rules|wc -l`
+GE=$[AN-TE]
+	sed -i '/^HWADDR/d'  /etc/sysconfig/network-scripts/ifcfg-eth* 
+	sed -i '/^NM_CONTROLLED/d'  /etc/sysconfig/network-scripts/ifcfg-eth* 
+	if  [ "X$GE" = "X2" ];then
+ 			sed -i "s/eth1/eth2/g" /etc/udev/rules.d/70-persistent-net.rules
+  else
+        echo "nothing"
+ 	fi
