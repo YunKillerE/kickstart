@@ -1,0 +1,28 @@
+SERIAL 0 9600
+#default debug
+default base
+timeout 50
+prompt 1
+display pxelinux.cfg/list_ngis
+
+LABEL local
+  localboot 1
+LABEL 0
+	localboot 1
+
+LABEL debug
+kernel linux/debug/jm.kernel
+append initrd=linux/debug/ngis.initrd JMdebug KS=@KS@ JIMMY-DEBUG
+
+
+LABEL 62i
+kernel linux/debug/jm.kernel
+append initrd=linux/debug/jm.initrd JMcmdline JMos=rh62-x86-64 KS=@KS@
+
+LABEL 6u4
+kernel linux/jimmy/jm.kernel
+append initrd=linux/jimmy/jm.initrd JMcmdline JMos=rh62-x86-64 KS=@KS@
+
+label base
+kernel linux/jimmy/jm.vmlinuz
+append ks=nfs:@KS@:/home/ksis/ks/base.ks ksdevice=eth0 initrd=linux/jimmy/jm.initrd devfs=nomount biosdevname=0 ramdisk_size=16384 nofb acpi=off #console=tty0 #console=ttyS0,115200

@@ -1,0 +1,26 @@
+default squid
+prompt 1
+timeout 60
+display msgs/boot.msg
+F1 msgs/boot.msg
+F2 msgs/general.msg
+F3 msgs/expert.msg
+F4 msgs/param.msg
+F5 msgs/rescue.msg
+7 msgs/snake.msg
+
+label squid
+  kernel 6u2/vmlinuz
+  append ks=nfs:10.120.8.251:/opt/iso/6u2/squid.ks ksdevice=eth0 initrd=6u2/initrd.img devfs=nomount biosdevname=0 ramdisk_size=16384 nofb acpi=off #console=tty0 #console=ttyS0,115200
+label home
+  kernel 6u2/vmlinuz
+  append ks=nfs:10.120.8.251:/opt/iso/6u2/home.ks ksdevice=eth0 initrd=6u2/initrd.img devfs=nomount ramdisk_size=16384 nofb acpi=off #console=tty0 #console=ttyS0,115200
+label console
+  kernel 6u2/vmlinuz
+  append ks=nfs:10.120.8.251:/opt/iso/6u2/console.ks ksdevice=eth0 initrd=6u2/initrd.img devfs=nomount ramdisk_size=16384 nofb acpi=off #console=tty0 #console=ttyS0,115200
+label lvs
+  kernel 6u2/vmlinuz
+  append ks=nfs:10.120.8.251:/opt/iso/6u2/lvs.ks ksdevice=eth0 initrd=6u2/initrd.img devfs=nomount ramdisk_size=16384 nofb acpi=off #console=tty0 #console=ttyS1,115200
+label log
+  kernel 6u2/vmlinuz
+  append ks=nfs:10.120.8.251:/opt/iso/6u2/log.ks ksdevice=eth2 initrd=6u2/initrd.img devfs=nomount biosdevname=0 ramdisk_size=16384 nofb acpi=off #console=tty0 #console=ttyS1,115200

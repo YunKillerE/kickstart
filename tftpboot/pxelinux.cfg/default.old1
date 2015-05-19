@@ -1,0 +1,26 @@
+SERIAL 0 9600
+#default ALinstall
+default 62i
+timeout 500
+prompt 1
+display pxelinux.cfg/list_ngis
+
+LABEL local
+  localboot 1
+LABEL 0
+	localboot 1
+
+LABEL ALinstall
+kernel linux/ngis/ngis.kernel
+append initrd=linux/ngis/ngis.initrd ALinstall KS=10.120.54.38 ALIBABA-NGIS
+
+
+LABEL 57i
+kernel linux/ngis/ngis.kernel
+append initrd=linux/ngis/ngis.initrd ALcmdline ALos=rh57-x86-64 KS=10.120.54.38
+
+
+LABEL 62i
+kernel linux/ngis/ngis.kernel
+append initrd=linux/ngis/ngis.initrd ALcmdline ALos=rh62-x86-64 KS=10.120.54.38
+

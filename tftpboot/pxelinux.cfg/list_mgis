@@ -1,0 +1,21 @@
+
+pxelinux.cfg/splash.lss
+
+          0b*Welcome To KSIS For 04JIMMY 0bInstaller*
+          09Any question please connect to: 04liujmsunits@hotmail.com
+          0110220330440550660770880990aa0bb0cc0dd0ee0ff
+
+
+05********************04 KSIS-MUNE 05****************************************
+
+ 05base 07= Install rh64-x86-64           05debug 07= Install DEBUG-MODE
+
+05********************************************************************************
+
+
+06ALcmdline Install Like:
+    04 62i JMip=10.10.10.10 JMhn=console1.cn8 JMmd JMdomian=cn8
+
+06**Default is 0ebase 06Label, Timeout is 0e50s
+06JMcmdline Install Like:
+06**INPUT LIKE THIS: 0edebug 04To comein debug Diagnose mode
