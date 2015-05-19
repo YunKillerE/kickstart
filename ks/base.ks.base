@@ -1,0 +1,92 @@
+# kickstart file for search server
+#System  language
+lang en_US
+#Language modules to install
+#langsupport zh_CN.GB18030 --default=en_US
+#System keyboard
+keyboard us
+#Sytem timezone
+timezone Asia/Shanghai
+#Root password
+#rootpw --iscrypted $1$UHlWseBT$Bbyz7d/cVx5Is2ojBKWVO/
+rootpw --iscrypted $6$jimmy$wCNEHoS.PVkczbCRjii91rSt7EUX9XU9BiyBSvWdI6foMJLjcziNIdQ.aZxh7TMaCyf3Eda4kti/MX6Cwe5F70
+#Root password root
+#rootpw --iscrypted $1$Uau90dlO$0MN35WgQvrfWqtwtA.Xuz/
+#Reboot after installation
+reboot
+#Install Red Hat Linux instead of upgrade
+install
+#Use NFS installation Media
+#nfs --server=@KS@ --dir=/home/ksis/iso
+# Use network installation 
+url --url=http:\/\/@KS@:9999/ksis/iso/
+#System bootloader configuration
+#bootloader --location=mbr --driveorder=sdb,sda
+bootloader --location=mbr --driveorder=sda,sdb --append="console=tty0 console=ttyS0,115200"
+#Clear the Master Boot Record
+zerombr yes
+#Partition clearing information
+clearpart --all --initlabel
+#System authorization infomation
+auth  --useshadow  --enablemd5
+#Network information
+network --bootproto=dhcp --device=eth0
+#Firewall configuration
+firewall --disabled
+firstboot --disable
+selinux  --disabled
+text
+#Do not configure XWindows
+skipx
+
+%pre
+#!/bin/sh
+mkdir /mnt/temp
+mount @KS@:/home/ksis/ /mnt/temp
+SDIR="/mnt/temp/"
+#KS=`cat $SDIR/nfs/ksvr |grep KS |awk '{print $2}'`
+SN=`/usr/sbin/dmidecode -s system-serial-number|grep -v '^#'|sed 's/ //g'` > /dev/null 2>&1
+HOST=`cat ${SDIR}/nfs/sn2hosts | grep -i ${SN} | awk '{ print $2 }'`
+TYPE=`echo ${HOST} | awk -F'.' '{ print $1}' | awk '{gsub(/[0-9]/,"",$0);print}'`
+if [ ${TYPE} = cache ]
+   then 
+cat ${SDIR}/pre/squid.include > /tmp/part.include
+   elif [ ${TYPE} = lvs ]
+     then
+cat ${SDIR}/pre/lvs.include > /tmp/part.include 
+   elif [ ${TYPE} = console ]
+     then
+cat ${SDIR}/pre/console.include > /tmp/part.include 
+   elif [ ${TYPE} = home ]         
+     then
+cat ${SDIR}/pre/home.include > /tmp/part.include 
+   elif [ ${TYPE} = squid ]
+     then
+cat ${SDIR}/pre/squid.include > /tmp/part.include
+   elif [ ${TYPE} = tools ]
+     then
+cat ${SDIR}/pre/home.include > /tmp/part.include
+   else
+cat ${SDIR}/pre/small.include > /tmp/part.include
+fi
+%end
+
+
+# Disk partitioning information
+part /boot  --fstype ext3 --size 512   --asprimary --ondrive=sda
+part swap                --size 2048  --asprimary --ondrive=sda
+part /  --fstype ext3 --size 20480 --asprimary  --ondrive=sda
+part /var --fstype ext3 --size 6144 --ondrive=sda
+part /home --fstype ext3 --size 100   --grow --ondrive=sda
+
+#Package install information
+%include /tmp/part.include
+
+%post
+cat >> /etc/rc.local <<-EOF
+mkdir /mnt/temp
+mount -o nolock @KS@:/home/ksis/ /mnt/temp
+cd /mnt/temp/script/
+bash -x run.sh
+EOF
+
