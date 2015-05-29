@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #****************************************************************#
 # ScriptName: oob_os_init.sh
 # Author: liujmsunits@hotmail.com

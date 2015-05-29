@@ -4,7 +4,7 @@
 # Author: shoukun.taosk@alibaba-inc.com
 # Create Date: 2012-05-30 16:21
 # Modify Author: liujmsunits@hotmail.com
-# Modify Date: 2015-05-18 21:42
+# Modify Date: 2015-05-30 00:04
 # Function: 
 #***************************************************************#
 PWD=`pwd`
@@ -18,7 +18,7 @@ if [ -e post.tgz ]
   then
 	mv post.tgz bak/post-`date +%Y%m%d%H%M%S`.tgz
 	path="$PWD/bak/"
-	find $path -type f -mtime +3|xargs rm -rf
+	find $path -type f -mtime +100|xargs rm -rf
   else
 	:
 fi

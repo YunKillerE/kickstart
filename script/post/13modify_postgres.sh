@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #****************************************************************#
 # ScriptName: 13modify_postgres.sh
 # Author: liujmsunits@hotmail.com

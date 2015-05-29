@@ -1,10 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 #****************************************************************#
 # ScriptName: ksis_post.sh
 # Author: liujmsunits@hotmail.com
 # Create Date: 2012-05-29 13:15
-# Modify Author: $liujmsunits@hotmail.com
-# Modify Date: 2015-05-06 20:55
+# Modify Author: liujmsunits@hotmail.com
+# Modify Date: 2015-05-30 03:31
 # Function:  
 #***************************************************************#
 function send_mail() {
@@ -46,14 +46,20 @@ function progress(){
 :
 }
 
-
 E_file="/tmp/install_E_flag"
 W_file="/root/install_warn.log"
 
-for i in `ls /root/post/[0-9]*.sh`
+PWD=`pwd`
+
+source $PWD/00*.sh
+
+#source $PWD/$JIMMYSN
+
+for i in `ls /root/post/[01-99]*.sh`
 do
 	progress `basename $i` 8888
 	source $i 2>&1|tee -a /root/post/ksis_post.log
 	[ -e $E_file ] && E_flag=`cat $E_file|tr -d " \n"`&&error_log $E_flag
 done
+
 

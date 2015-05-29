@@ -1,10 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 #****************************************************************#
 # ScriptName: 00set_variable.sh
 # Author: liujmsunits@hotmail.com
 # Create Date: 2015-05-05 04:51
-# Modify Author: $liujmsunits@hotmail.com
-# Modify Date: 2015-05-06 01:05
+# Modify Author: liujmsunits@hotmail.com
+# Modify Date: 2015-05-30 02:47
 # Function: get veriable
 #***************************************************************#
 DIR="/mnt/temp"
@@ -26,11 +26,11 @@ NETMOD=`cat $DIR/nfs/sn2hosts |grep $JIMMYSN |awk '{print  $5}'`
 
 KS=`cat $DIR/nfs/node |grep KS |awk -F'=' '{print $2}'`
 
-if [ $JMHOSTNAME = cache* ]
+if [ "$JMHOSTNAME" = "cache*" ]
 then
 	HOSTTAG="cache_server"
-elif
-	[ $JMHOSTNAME = home* ]
+elif 
+	[ "$JMHOSTNAME" = "home*" ]
 then
 	HOSTTAG="home_server"
 else

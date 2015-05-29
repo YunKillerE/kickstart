@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #****************************************************************#
 # ScriptName: clean.sh
 # Author: liujmsunits@hotmail.com

@@ -1,5 +1,5 @@
 set -x
-#!/bin/sh
+#!/bin/bash
 #****************************************************************#
 # ScriptName: run.sh
 # Author: liujmsunits@hotmail.com
@@ -35,7 +35,7 @@ mkdir /root/post/
 /usr/bin/wget -T3 -t2 http://$KS:9999/ksis/script/post.tgz -O /root/post/post.tgz
 cd /root/post/
 tar -xzf post.tgz
-yum clean all
+#yum clean all
 
 #echo $KS>>/root/post/ksis_post.log
 #echo $DHCPIP>>/root/post/ksis_post.log
@@ -43,4 +43,4 @@ yum clean all
 #echo $tmp_sn>>/root/post/ksis_post.log
 
 
-bash -x /root/post/ksis_post.sh 2>&1 |tee -a /root/post/run.log
+source /root/post/ksis_post.sh 2>&1 |tee -a /root/post/run.log

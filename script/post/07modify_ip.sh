@@ -1,10 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 #****************************************************************#
 # ScriptName: modify_ip.sh
 # Author: liujmsunits@hotmail.com
 # Create Date: 2012-05-29 15:59
-# Modify Author: $SHTERM_REAL_USER@alibaba-inc.com
-# Modify Date: 2015-05-05 20:37
+# Modify Author: liujmsunits@hotmail.com
+# Modify Date: 2015-05-30 03:02
 # Function: 
 #***************************************************************#
 function cal_network()
@@ -47,9 +47,6 @@ function create_nobond(){
 	IPADDR=$IPADDR
 	NETMASK=$NETMASK
 	ONBOOT=yes
-	RX_MAX=\`ethtool -g "\$DEVICE" | grep 'Pre-set' -A1 | awk '/RX/{print \$2}'\`
-	RX_CURRENT=\`ethtool -g "\$DEVICE" | grep "Current" -A1 | awk '/RX/{print \$2}'\`
-	[ "\$RX_CURRENT" -lt "\$RX_MAX" ] && ethtool -G "\$DEVICE" rx "\$RX_MAX"
 	EOF
 
 }
@@ -64,9 +61,6 @@ function create_bond(){
 	ONBOOT=yes
 	MASTER=bond0
 	SLAVE=yes
-	RX_MAX=\`ethtool -g "\$DEVICE" | grep 'Pre-set' -A1 | awk '/RX/{print \$2}'\`
-	RX_CURRENT=\`ethtool -g "\$DEVICE" | grep "Current" -A1 | awk '/RX/{print \$2}'\`
-	[ "\$RX_CURRENT" -lt "\$RX_MAX" ] && ethtool -G "\$DEVICE" rx "\$RX_MAX"
 	EOF
 
 	cat <<- EOF > /etc/sysconfig/network-scripts/ifcfg-$ETH1
@@ -77,9 +71,6 @@ function create_bond(){
 	ONBOOT=yes
 	MASTER=bond0
 	SLAVE=yes
-	RX_MAX=\`ethtool -g "\$DEVICE" | grep 'Pre-set' -A1 | awk '/RX/{print \$2}'\`
-	RX_CURRENT=\`ethtool -g "\$DEVICE" | grep "Current" -A1 | awk '/RX/{print \$2}'\`
-	[ "\$RX_CURRENT" -lt "\$RX_MAX" ] && ethtool -G "\$DEVICE" rx "\$RX_MAX"
 	EOF
 
 	cat <<- EOF > /etc/sysconfig/network-scripts/ifcfg-bond0
@@ -125,7 +116,6 @@ function create_lo()
 	rm -rf /etc/sysconfig/network-scripts/ifcfg-eth{0,1,2,3,4,5,7,8,9}
 	
 	if [  "X$NETMOD" = "XNOBOND" -o  "X$NETMOD" = "X" ];then
-    	#	cal_network
 		create_nobond
 	else
 		create_bond

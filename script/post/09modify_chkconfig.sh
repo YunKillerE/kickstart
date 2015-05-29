@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #****************************************************************#
 # ScriptName: modify_chkconfig.sh
 # Author: liujmsunits@hotmail.com

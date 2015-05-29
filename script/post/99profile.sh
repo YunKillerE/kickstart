@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 sed -i "s/udp6/#udp6/g" /etc/netconfig
 sed -i "s/tcp6/#tcp6/g" /etc/netconfig
@@ -11,7 +11,7 @@ sed -i "s/tcp6/#tcp6/g" /etc/netconfig
 
 
 cat >/etc/rc.local <<-EOF
-#!/bin/sh
+#!/bin/bash
 #
 # This script will be executed *after* all the other init scripts.
 # You can put your own initialization stuff in here if you don't
