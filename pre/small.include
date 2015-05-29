@@ -1,0 +1,17 @@
+%packages
+@additional-devel
+@base
+@core
+@development
+@system-admin-tools
+@system-management
+@system-management-snmp
+@nfs-file-server
+OpenIPMI
+dhcp
+freeipmi
+ipmitool
+nmap
+tftp-server
+
+%end

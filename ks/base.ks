@@ -45,7 +45,7 @@ mkdir /mnt/temp
 mount 192.168.218.131:/home/ksis/ /mnt/temp
 SDIR="/mnt/temp/"
 #KS=`cat $SDIR/nfs/ksvr |grep KS |awk '{print $2}'`
-SN=`/usr/sbin/dmidecode -s system-serial-number|grep -v '^#'|sed 's/ //g'`
+SN=`/usr/sbin/dmidecode -s system-serial-number|grep -v '^#'|sed 's/ //g'` > /dev/null 2>&1
 HOST=`cat ${SDIR}/nfs/sn2hosts | grep -i ${SN} | awk '{ print $2 }'`
 TYPE=`echo ${HOST} | awk -F'.' '{ print $1}' | awk '{gsub(/[0-9]/,"",$0);print}'`
 if [ ${TYPE} = cache ]

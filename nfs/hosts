@@ -1,8 +1,17 @@
 # Do not remove the following line, or various programs
 # that require network functionality will fail.
 127.0.0.1		localhost.localdomain localhost
-42.120.149.143   yum.tbsite.net
-192.168.218.199 console1 console1
-218.201.46.117 console2.cn300 console2
-218.201.46.118 log1.cn300 log1
-218.201.46.119 log2.cn300 log2
+192.168.218.131 jimmycluster My-CDN-MacHine master
+192.168.218.199 client client01
+20.26.17.74 cvs
+
+
+
+#github.com
+#207.97.227.239	github.com
+#65.74.177.129	www.github.com
+#207.97.227.252	nodeload.github.com
+#207.97.227.223	raw.github.com
+#204.232.175.78	documentcloud.github.com
+#204.232.175.78	pages.github.com
+
